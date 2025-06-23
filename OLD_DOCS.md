@@ -98,3 +98,64 @@ Set volume:
   </s:Body>
 </s:Envelope>
 ```
+
+## Updated Implementation Approach
+
+We now use `async-upnp-client` library instead of manual SOAP requests. This provides:
+- Automatic UPnP device discovery and service parsing
+- Built-in SOAP request handling  
+- Real-time volume change events via UPnP event subscriptions
+- Home Assistant integration compatibility
+
+### UPnP Endpoint Discovery
+
+Use `async-upnp-client` to discover Samsung TV RenderingControl service:
+
+```bash
+# Search for Samsung TV RenderingControl service
+pipx run async-upnp-client --pprint search --search_target "urn:schemas-upnp-org:service:RenderingControl:1"
+
+# Expected output for Samsung TV:
+{
+    "LOCATION": "http://192.168.1.219:7676/smp_14_",
+    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0", 
+    "ST": "urn:schemas-upnp-org:service:RenderingControl:1",
+    "USN": "uuid:08583b01-008c-1000-817d-bc148594dddb::urn:schemas-upnp-org:service:RenderingControl:1"
+}
+```
+
+### Real-time Volume Change Events
+
+Samsung TVs support UPnP event subscriptions for instant volume change notifications:
+
+```bash
+# Subscribe to volume change events
+pipx run async-upnp-client --pprint subscribe "http://192.168.1.219:7676/smp_14_" RC
+
+# Expected event output when volume changes:
+{
+    "timestamp": 1750646634.707767,
+    "service_id": "urn:upnp-org:serviceId:RenderingControl", 
+    "service_type": "urn:schemas-upnp-org:service:RenderingControl:1",
+    "state_variables": {
+        "LastChange": "<Event xmlns=\"urn:schemas-upnp-org:metadata-1-0/RCS/\"><InstanceID val=\"0\"><Volume channel=\"Master\" val=\"17\"/></InstanceID></Event>",
+        "Volume": 17
+    }
+}
+```
+
+### Integration Architecture
+
+1. **SSDP Discovery**: Home Assistant automatically discovers Samsung TVs via manifest.json SSDP matcher
+2. **Device Setup**: Use `async-upnp-client` to create UPnP device from discovered LOCATION URL
+3. **Volume Control**: Use DmrDevice profile for get/set volume operations
+4. **Event Subscriptions**: Subscribe to RenderingControl events for real-time volume updates
+5. **MediaPlayer Entity**: Expose volume control through Home Assistant MediaPlayer interface
+
+### Key Benefits
+
+- ✅ No manual SOAP XML construction needed
+- ✅ Real-time volume change events (no polling required)
+- ✅ Robust error handling and device lifecycle management
+- ✅ Home Assistant native integration patterns
+- ✅ Proven working with Samsung TV hardware
