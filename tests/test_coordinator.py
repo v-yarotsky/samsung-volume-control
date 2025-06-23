@@ -62,13 +62,17 @@ class TestSamsungTVCoordinator:
         coordinator = SamsungTVCoordinator(hass, location, "Test TV")
         await coordinator.async_refresh()
         
+        # Verify initial state
+        assert coordinator.last_update_success
+        assert coordinator.available
+        
         # Simulate device going offline
         mock_upnp_factory["dmr_device"].async_get_volume.side_effect = ConnectionError("Device offline")
         
-        # Refresh should handle error gracefully
-        with pytest.raises(UpdateFailed):
-            await coordinator.async_refresh()
+        # Refresh should handle error gracefully - UpdateFailed is caught by framework
+        await coordinator.async_refresh()
         
+        # Verify coordinator state reflects the offline device
         assert not coordinator.last_update_success
         assert not coordinator.available
 
@@ -80,7 +84,7 @@ class TestSamsungTVCoordinator:
         await coordinator.async_refresh()
         
         # Simulate volume event from TV
-        await coordinator.handle_volume_event(85)
+        coordinator.handle_volume_event(85)
         
         # Verify data was updated
         assert coordinator.data["volume_level"] == 0.85  # 85/100
@@ -109,12 +113,17 @@ class TestSamsungTVCoordinator:
         coordinator = SamsungTVCoordinator(hass, location, "Test TV")
         await coordinator.async_refresh()
         
+        # Verify initial state
+        assert coordinator.last_update_success
+        assert coordinator.available
+        
         # Simulate device disconnection
         mock_upnp_factory["dmr_device"].async_get_volume.side_effect = ConnectionError("Device offline")
         
-        with pytest.raises(UpdateFailed):
-            await coordinator.async_refresh()
+        # Refresh handles error gracefully - no exception bubbles up
+        await coordinator.async_refresh()
         
+        assert not coordinator.last_update_success
         assert not coordinator.available
         
         # Simulate device coming back online

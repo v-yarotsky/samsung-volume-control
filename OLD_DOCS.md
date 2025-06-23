@@ -161,3 +161,43 @@ pipx run async-upnp-client --pprint subscribe "http://192.168.1.219:7676/smp_14_
 - ✅ Robust error handling and device lifecycle management
 - ✅ Home Assistant native integration patterns
 - ✅ Proven working with Samsung TV hardware
+
+## Home Assistant DataUpdateCoordinator Best Practices
+
+Based on official Home Assistant documentation for coordinated data fetching and entity availability:
+
+### DataUpdateCoordinator Usage Patterns
+
+1. **Centralized Data Polling**: Use for efficient, coordinated API polling across multiple entities
+2. **Error Handling**: Raise `UpdateFailed` for general API communication errors
+3. **Initial Setup**: Use `async_config_entry_first_refresh()` for safe initial data loading
+4. **Manual Updates**: Use `async_request_refresh()` to trigger updates outside normal interval
+
+### Entity Availability Rules
+
+**When to Mark Entities Unavailable:**
+- "If we can't fetch data from a device or service, we should mark it as unavailable"
+- Goal: Reflect current state accurately rather than showing stale data
+- If some data is missing but connection exists, mark entity as "unknown" instead
+
+**Implementation with Coordinator:**
+```python
+class MySensor(SensorEntity, CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.identifier in self.coordinator.data
+```
+
+### Error Handling Best Practices
+
+```python
+try:
+    data = await self.my_api.fetch_data()
+except ApiAuthError as err:
+    raise ConfigEntryAuthFailed from err
+except ApiError as err:
+    raise UpdateFailed(f"Error communicating with API: {err}")
+```
+
+**Key Principle**: UpdateFailed exceptions are caught by DataUpdateCoordinator framework and handled internally - they should NOT bubble up to callers. The coordinator sets `last_update_success = False` and entities become unavailable automatically.
