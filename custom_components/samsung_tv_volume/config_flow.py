@@ -1,89 +1,75 @@
-"""Adds config flow for Blueprint."""
-
+"""Config flow for Samsung TV Volume Control integration."""
 from __future__ import annotations
+
+from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from slugify import slugify
+from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import (
-    IntegrationBlueprintApiClient,
-    IntegrationBlueprintApiClientAuthenticationError,
-    IntegrationBlueprintApiClientCommunicationError,
-    IntegrationBlueprintApiClientError,
-)
+from async_upnp_client.aiohttp import AiohttpRequester
+from async_upnp_client.client_factory import UpnpFactory
+
 from .const import DOMAIN, LOGGER
 
 
-class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+class SamsungTVVolumeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Samsung TV Volume Control."""
 
     VERSION = 1
 
-    async def async_step_user(
-        self,
-        user_input: dict | None = None,
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        _errors = {}
-        if user_input is not None:
-            try:
-                await self._test_credentials(
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                )
-            except IntegrationBlueprintApiClientAuthenticationError as exception:
-                LOGGER.warning(exception)
-                _errors["base"] = "auth"
-            except IntegrationBlueprintApiClientCommunicationError as exception:
-                LOGGER.error(exception)
-                _errors["base"] = "connection"
-            except IntegrationBlueprintApiClientError as exception:
-                LOGGER.exception(exception)
-                _errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    ## Do NOT use this in production code
-                    ## The unique_id should never be something that can change
-                    ## https://developers.home-assistant.io/docs/config_entries_config_flow_handler#unique-ids
-                    unique_id=slugify(user_input[CONF_USERNAME])
-                )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME,
-                        default=(user_input or {}).get(CONF_USERNAME, vol.UNDEFINED),
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.TEXT,
-                        ),
-                    ),
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.PASSWORD,
-                        ),
-                    ),
-                },
-            ),
-            errors=_errors,
+        """Handle SSDP discovery."""
+        LOGGER.debug("SSDP discovery: %s", discovery_info)
+        
+        # Check if it's a Samsung device
+        manufacturer = discovery_info.upnp.get("manufacturer", "")
+        server_header = discovery_info.ssdp_headers.get("SERVER", "")
+        
+        if "Samsung" not in manufacturer and "Samsung" not in server_header:
+            LOGGER.debug("Not a Samsung device: %s", manufacturer)
+            return self.async_abort(reason="not_samsung_tv")
+        
+        # Extract UDN for uniqueness check
+        udn = discovery_info.upnp.get("UDN") or discovery_info.ssdp_usn.split("::")[0]
+        
+        # Check if already configured
+        await self.async_set_unique_id(udn)
+        self._abort_if_unique_id_configured()
+        
+        # Extract device info
+        location = discovery_info.ssdp_location
+        parsed_url = urlparse(location)
+        host = parsed_url.hostname
+        friendly_name = discovery_info.upnp.get("friendlyName", f"Samsung TV ({host})")
+        
+        try:
+            # Verify device is accessible via async-upnp-client
+            requester = AiohttpRequester(timeout=10)
+            factory = UpnpFactory(requester)
+            device = await factory.async_create_device(location)
+            
+            LOGGER.debug("Successfully connected to Samsung TV: %s", friendly_name)
+            
+        except ConnectionError:
+            LOGGER.error("Cannot connect to Samsung TV at %s", location)
+            return self.async_abort(reason="cannot_connect")
+        except Exception as err:
+            LOGGER.error("Invalid UPnP device at %s: %s", location, err)
+            return self.async_abort(reason="invalid_device")
+        
+        # Create config entry
+        return self.async_create_entry(
+            title=friendly_name,
+            data={
+                CONF_HOST: host,
+                CONF_NAME: friendly_name,
+                "location": location,
+                "udn": udn,
+            },
         )
-
-    async def _test_credentials(self, username: str, password: str) -> None:
-        """Validate credentials."""
-        client = IntegrationBlueprintApiClient(
-            username=username,
-            password=password,
-            session=async_create_clientsession(self.hass),
-        )
-        await client.async_get_data()

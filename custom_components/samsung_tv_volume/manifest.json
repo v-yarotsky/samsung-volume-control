@@ -9,6 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://git.home.yarotsky.me/vlad/samsung-volume-control/issues",
   "version": "0.1.0",
+  "requirements": ["async-upnp-client"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:service:RenderingControl:1"

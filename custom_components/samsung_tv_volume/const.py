@@ -1,8 +1,7 @@
-"""Constants for integration_blueprint."""
+"""Constants for Samsung TV Volume Control."""
 
 from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
 
-DOMAIN = "integration_blueprint"
-ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
+DOMAIN = "samsung_tv_volume"

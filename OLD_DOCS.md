@@ -15,6 +15,8 @@ Reference the following documentation:
 - https://github.com/MatthewFlamm/pytest-homeassistant-custom-component
 - https://developers.home-assistant.io/docs/core/integration_system_health
 - https://developers.home-assistant.io/docs/core/entity/media-player (we'll support VOLUME_SET feature only)
+- https://developers.home-assistant.io/docs/config_entries_config_flow_handler
+- https://github.com/plugwise/plugwise_usb-beta/blob/main/tests/test_config_flow.py
 
 I have previously had this JavaScript code to discover the device, use it to figure out how to do it with HomeAssistant:
 ```
@@ -103,7 +105,7 @@ Set volume:
 
 We now use `async-upnp-client` library instead of manual SOAP requests. This provides:
 - Automatic UPnP device discovery and service parsing
-- Built-in SOAP request handling  
+- Built-in SOAP request handling
 - Real-time volume change events via UPnP event subscriptions
 - Home Assistant integration compatibility
 
@@ -118,7 +120,7 @@ pipx run async-upnp-client --pprint search --search_target "urn:schemas-upnp-org
 # Expected output for Samsung TV:
 {
     "LOCATION": "http://192.168.1.219:7676/smp_14_",
-    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0", 
+    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
     "ST": "urn:schemas-upnp-org:service:RenderingControl:1",
     "USN": "uuid:08583b01-008c-1000-817d-bc148594dddb::urn:schemas-upnp-org:service:RenderingControl:1"
 }
@@ -135,7 +137,7 @@ pipx run async-upnp-client --pprint subscribe "http://192.168.1.219:7676/smp_14_
 # Expected event output when volume changes:
 {
     "timestamp": 1750646634.707767,
-    "service_id": "urn:upnp-org:serviceId:RenderingControl", 
+    "service_id": "urn:upnp-org:serviceId:RenderingControl",
     "service_type": "urn:schemas-upnp-org:service:RenderingControl:1",
     "state_variables": {
         "LastChange": "<Event xmlns=\"urn:schemas-upnp-org:metadata-1-0/RCS/\"><InstanceID val=\"0\"><Volume channel=\"Master\" val=\"17\"/></InstanceID></Event>",
