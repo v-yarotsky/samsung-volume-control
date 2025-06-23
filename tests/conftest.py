@@ -79,12 +79,14 @@ def mock_upnp_factory():
         
         # Configure UPnP device creation
         upnp_device = MagicMock()
-        upnp_device.device_info = {
-            "friendly_name": "[TV]Samsung LED60",
-            "manufacturer": "Samsung Electronics", 
-            "model_name": "UN60H7100",
-            "udn": "uuid:08583b01-008c-1000-817d-bc148594dddb"
-        }
+        upnp_device.friendly_name = "[TV]Samsung LED60"
+        upnp_device.manufacturer = "Samsung Electronics"
+        upnp_device.model_name = "UN60H7100"
+        upnp_device.model_number = "2014"
+        upnp_device.serial_number = "12345"
+        upnp_device.udn = "uuid:08583b01-008c-1000-817d-bc148594dddb"
+        upnp_device.device_type = "urn:schemas-upnp-org:device:MediaRenderer:1"
+        upnp_device.presentation_url = "http://192.168.1.219/"
         factory_instance.async_create_device.return_value = upnp_device
         
         # Configure DmrDevice mock
