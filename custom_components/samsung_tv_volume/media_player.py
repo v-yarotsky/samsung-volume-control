@@ -6,14 +6,30 @@ from typing import Any
 
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import SamsungTVCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Samsung TV MediaPlayer from config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    
+    # Create MediaPlayer entity
+    entity = SamsungTVMediaPlayer(coordinator)
+    
+    async_add_entities([entity], True)
 
 
 class SamsungTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
