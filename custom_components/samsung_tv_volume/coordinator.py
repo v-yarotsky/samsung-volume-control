@@ -7,6 +7,8 @@ from typing import Any
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.components import ssdp
+from aiohttp import ClientPayloadError
+from async_upnp_client.exceptions import UpnpXmlContentError
 
 from .upnp_device import SamsungTVUPnPDevice, DeviceInfo
 
@@ -85,10 +87,12 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Failed to set up Samsung TV device: %s", err)
             self._device = None
 
-            # Try to rediscover device if location is stale
-            if "Could not find device element" in str(err):
+            # Try to rediscover device if location is stale (specific exception types)
+            if isinstance(err, (UpnpXmlContentError, ClientPayloadError)):
                 _LOGGER.info(
-                    "Attempting to rediscover Samsung TV with UDN %s", self.udn
+                    "Attempting to rediscover Samsung TV with UDN %s (error: %s)",
+                    self.udn,
+                    type(err).__name__,
                 )
                 new_location = await self._rediscover_device()
                 if new_location:
