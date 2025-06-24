@@ -100,7 +100,7 @@ class SamsungTVUPnPDevice:
             self._dmr_device.on_event = self._handle_upnp_event
 
             # Start event subscription on rendering control service
-            await self._dmr_device.async_subscribe_services()
+            await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
 
             _LOGGER.debug("Subscribed to UPnP events")
             return True
