@@ -1,0 +1,47 @@
+[project]
+name = "samsung-tv-volume"
+version = "0.1.0"
+description = "Samsung TV Volume Control for Home Assistant"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "async-upnp-client>=0.44.0",
+    "colorlog==6.9.0",
+    "homeassistant==2025.2.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-homeassistant-custom-component>=0.13.214",
+    "ruff==0.11.13",
+    "pip>=21.3.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "ALL",
+]
+
+ignore = [
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "D203", # no-blank-line-before-class (incompatible with formatter)
+    "D212", # multi-line-summary-first-line (incompatible with formatter)
+    "COM812", # incompatible with formatter
+    "ISC001", # incompatible with formatter
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
