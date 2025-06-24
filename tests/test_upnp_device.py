@@ -16,7 +16,7 @@ class TestUpnpDevice:
         # Verify the setup process
         assert device.is_connected
         mock_upnp_factory["factory"].async_create_device.assert_called_once_with(location)
-        mock_upnp_factory["DmrDevice"].assert_called_once_with(mock_upnp_factory["upnp_device"])
+        mock_upnp_factory["DmrDevice"].assert_called_once_with(mock_upnp_factory["upnp_device"], None)
 
     async def test_get_volume_via_dmr_device(self, mock_upnp_factory):
         """Test getting volume through DmrDevice."""

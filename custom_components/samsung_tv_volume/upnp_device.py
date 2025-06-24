@@ -42,7 +42,7 @@ class SamsungTVUPnPDevice:
             self._requester = AiohttpRequester(timeout=10)
             factory = UpnpFactory(self._requester)
             self._upnp_device = await factory.async_create_device(self.location)
-            self._dmr_device = DmrDevice(self._upnp_device)
+            self._dmr_device = DmrDevice(self._upnp_device, None)
 
             _LOGGER.debug("Successfully created DmrDevice for %s", self.location)
 
