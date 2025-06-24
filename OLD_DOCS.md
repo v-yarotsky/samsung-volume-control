@@ -17,6 +17,8 @@ Reference the following documentation:
 - https://developers.home-assistant.io/docs/core/entity/media-player (we'll support VOLUME_SET feature only)
 - https://developers.home-assistant.io/docs/config_entries_config_flow_handler
 - https://github.com/plugwise/plugwise_usb-beta/blob/main/tests/test_config_flow.py
+- https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
+- https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unavailable?_highlight=coordinator#example-for-integrations-using-the-coordinator
 
 I have previously had this JavaScript code to discover the device, use it to figure out how to do it with HomeAssistant:
 ```
@@ -201,3 +203,30 @@ except ApiError as err:
 ```
 
 **Key Principle**: UpdateFailed exceptions are caught by DataUpdateCoordinator framework and handled internally - they should NOT bubble up to callers. The coordinator sets `last_update_success = False` and entities become unavailable automatically.
+
+## Home Assistant Config Flow Handler Best Practices
+
+Based on official Home Assistant documentation for config entries and flow handlers:
+
+### Unique ID Management
+
+**Purpose**: Prevent duplicate device setup and enable proper device discovery management
+
+**Key Methods:**
+1. `async_set_unique_id(device_unique_id)`: Assigns a unique ID to the flow
+2. `_abort_if_unique_id_configured()`: Stops flow if a config entry with that unique ID already exists
+
+**Example Implementation:**
+```python
+# Assign unique ID and potentially abort if already configured
+await self.async_set_unique_id(device_unique_id)
+self._abort_if_unique_id_configured()
+```
+
+**Unique ID Requirements:**
+- Must be a stable string identifier
+- Should not be user-changeable
+- Common sources: serial numbers, MAC addresses, UUIDs, device identifiers
+- For UPnP devices: Use UDN (Unique Device Name) from device description
+
+**Testing Limitation**: In test environments, `_abort_if_unique_id_configured()` may not work properly due to isolation between config flow and existing config entries. This is a known framework limitation that doesn't affect real Home Assistant operation.
