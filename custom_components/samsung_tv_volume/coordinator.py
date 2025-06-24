@@ -115,11 +115,12 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
     async def _rediscover_device(self) -> str | None:
         """Rediscover device location using Home Assistant SSDP cache."""
         try:
-            discovery_info = await ssdp.async_get_discovery_info_by_udn(
+            discovery_infos = await ssdp.async_get_discovery_info_by_udn(
                 self.hass, self.udn
             )
-            if discovery_info:
-                new_location = discovery_info.ssdp_location
+            if discovery_infos:
+                # Use the first discovery info (they should all have the same location)
+                new_location = discovery_infos[0].ssdp_location
                 _LOGGER.info(
                     "Rediscovered Samsung TV at new location: %s", new_location
                 )
