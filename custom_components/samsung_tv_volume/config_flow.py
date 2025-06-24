@@ -34,15 +34,17 @@ class SamsungTVVolumeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Extract UDN for uniqueness check
         udn = discovery_info.upnp.get("UDN") or discovery_info.ssdp_usn.split("::")[0]
 
-        # Check if already configured
-        await self.async_set_unique_id(udn)
-        self._abort_if_unique_id_configured()
-
         # Extract device info
         location = discovery_info.ssdp_location
         parsed_url = urlparse(location)
         host = parsed_url.hostname
         friendly_name = discovery_info.upnp.get("friendlyName", f"Samsung TV ({host})")
+
+        # Check if already configured and update location if it changed
+        await self.async_set_unique_id(udn)
+        self._abort_if_unique_id_configured(
+            updates={"location": location, "host": host}
+        )
 
         try:
             # Verify device is accessible via async-upnp-client
