@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.components import ssdp
 from aiohttp import ClientPayloadError, ClientResponseError
-from async_upnp_client.exceptions import UpnpXmlContentError
+from async_upnp_client.exceptions import UpnpXmlContentError, UpnpResponseError
 
 from .upnp_device import SamsungTVUPnPDevice, DeviceInfo
 
@@ -88,7 +88,7 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             self._device = None
 
             # Try to rediscover device if location is stale (specific exception types)
-            if isinstance(err, (UpnpXmlContentError, ClientPayloadError, ClientResponseError)):
+            if isinstance(err, (UpnpXmlContentError, ClientPayloadError, ClientResponseError, UpnpResponseError)):
                 _LOGGER.info(
                     "Attempting to rediscover Samsung TV with UDN %s (error: %s)",
                     self.udn,
