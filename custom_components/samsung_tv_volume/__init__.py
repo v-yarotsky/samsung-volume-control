@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create coordinator
     coordinator = SamsungTVCoordinator(
-        hass, entry.data["location"], entry.data[CONF_NAME]
+        hass, entry.data["location"], entry.data[CONF_NAME], entry.data["udn"]
     )
 
     # Store coordinator in hass.data

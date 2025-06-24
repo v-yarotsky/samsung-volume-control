@@ -13,7 +13,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator initialization and setup."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         
         # Test initial state
         assert coordinator.name == "Test TV"
@@ -25,7 +25,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator first data refresh and device setup."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         
         # Mock initial volume
         mock_upnp_factory["dmr_device"].volume_level = 0.5
@@ -43,7 +43,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator refresh updates volume data."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Change volume on device
@@ -59,7 +59,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator handles device going offline."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Verify initial state
@@ -80,7 +80,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator handles UPnP volume events."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Simulate volume event from TV
@@ -94,7 +94,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator can set volume on device."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Test setting volume
@@ -110,7 +110,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator handles device reconnection."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Verify initial state
@@ -140,7 +140,7 @@ class TestSamsungTVCoordinator:
         """Test coordinator cleanup closes device properly."""
         location = "http://192.168.1.219:7676/smp_14_"
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Test cleanup
@@ -159,7 +159,7 @@ class TestSamsungTVCoordinator:
             "RenderingControl": rendering_control_service
         }
         
-        coordinator = SamsungTVCoordinator(hass, location, "Test TV")
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
         await coordinator.async_refresh()
         
         # Verify event subscription was attempted

@@ -31,7 +31,8 @@ class TestSamsungTVVolumeInit:
                 mock_coordinator_class.assert_called_once_with(
                     hass,
                     mock_config_entry.data["location"],
-                    mock_config_entry.data[CONF_NAME]
+                    mock_config_entry.data[CONF_NAME],
+                    mock_config_entry.data["udn"]
                 )
                 
                 # Verify coordinator is stored

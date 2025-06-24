@@ -15,7 +15,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_setup(self, hass, mock_upnp_factory):
         """Test MediaPlayer entity initialization."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         entity = SamsungTVMediaPlayer(coordinator)
@@ -29,7 +29,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_volume_level(self, hass, mock_upnp_factory):
         """Test MediaPlayer volume level property."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         # Mock coordinator data
@@ -42,7 +42,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_availability(self, hass, mock_upnp_factory):
         """Test MediaPlayer availability based on coordinator."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
         coordinator._available = True
 
@@ -57,7 +57,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_state(self, hass, mock_upnp_factory):
         """Test MediaPlayer state based on availability."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         entity = SamsungTVMediaPlayer(coordinator)
@@ -73,7 +73,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_set_volume(self, hass, mock_upnp_factory):
         """Test MediaPlayer set volume calls coordinator."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
         coordinator.async_set_volume = AsyncMock()
 
@@ -88,7 +88,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_coordinator_update(self, hass, mock_upnp_factory):
         """Test MediaPlayer responds to coordinator data updates."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         entity = SamsungTVMediaPlayer(coordinator)
@@ -106,7 +106,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_device_info(self, hass, mock_upnp_factory):
         """Test MediaPlayer device info."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         # Set up coordinator to populate device info
@@ -125,7 +125,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_entity_integration(self, hass, mock_upnp_factory):
         """Test MediaPlayer entity integration with Home Assistant."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
 
         # Mock coordinator data and availability
@@ -146,7 +146,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_real_time_updates(self, hass, mock_upnp_factory):
         """Test MediaPlayer receives real-time volume updates."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
         await coordinator.async_refresh()
 
@@ -164,7 +164,7 @@ class TestSamsungTVMediaPlayer:
     async def test_media_player_error_handling(self, hass, mock_upnp_factory):
         """Test MediaPlayer handles errors gracefully."""
         coordinator = SamsungTVCoordinator(
-            hass, "http://192.168.1.219:7676/smp_14_", "Test TV"
+            hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
         coordinator.async_set_volume = AsyncMock(side_effect=Exception("Device error"))
 

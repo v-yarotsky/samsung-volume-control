@@ -93,19 +93,47 @@ class SamsungTVUPnPDevice:
             raise RuntimeError("Device not set up")
 
         try:
-            # TODO: Implement actual event subscription using async-upnp-client
-            # For now, just store the callback for testing
+            # Store callback for later use
             self._event_callback = callback
+
+            # Set up event callback on DmrDevice
+            self._dmr_device.on_event = self._handle_upnp_event
+
+            # Start event subscription on rendering control service
+            await self._dmr_device.async_subscribe_services()
+
             _LOGGER.debug("Subscribed to UPnP events")
             return True
         except Exception as err:
             _LOGGER.error("Failed to subscribe to events: %s", err)
             return False
 
+    def _handle_upnp_event(self, service, state_variables):
+        """Handle UPnP event from Samsung TV."""
+        _LOGGER.debug(
+            "Received UPnP event from service %s: %s",
+            service.service_type,
+            state_variables,
+        )
+
+        # Look for volume changes in RenderingControl service
+        if service.service_type == "urn:schemas-upnp-org:service:RenderingControl:1":
+            if "Volume" in state_variables:
+                volume = state_variables["Volume"]
+                _LOGGER.debug("Volume changed to: %s", volume)
+                if self._event_callback:
+                    self._event_callback(volume)
+
     async def async_unsubscribe_events(self) -> None:
         """Unsubscribe from UPnP events."""
         try:
-            # TODO: Implement actual event unsubscription
+            if self._dmr_device:
+                # Unsubscribe from services
+                await self._dmr_device.async_unsubscribe_services()
+
+                # Clear event callback
+                self._dmr_device.on_event = None
+
             self._event_callback = None
             _LOGGER.debug("Unsubscribed from UPnP events")
         except Exception as err:

@@ -95,6 +95,9 @@ def mock_upnp_factory():
         dmr_device.volume_level = 0.5  # 50% volume (0.0-1.0 range)
         dmr_device.async_set_volume_level = AsyncMock()
         dmr_device.async_update = AsyncMock()
+        dmr_device.async_subscribe_services = AsyncMock()
+        dmr_device.async_unsubscribe_services = AsyncMock()
+        dmr_device.on_event = None
         dmr_device.has_volume_level = True
         dmr_device.has_volume_mute = True
         dmr_device.is_volume_muted = False

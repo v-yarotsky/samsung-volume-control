@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.components import ssdp
 
 from .upnp_device import SamsungTVUPnPDevice, DeviceInfo
 
@@ -22,6 +23,7 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         location: str,
         name: str,
+        udn: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -31,6 +33,7 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self.location = location
+        self.udn = udn
         self._device: SamsungTVUPnPDevice | None = None
         self._available = False
 
@@ -81,7 +84,54 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.error("Failed to set up Samsung TV device: %s", err)
             self._device = None
+
+            # Try to rediscover device if location is stale
+            if "Could not find device element" in str(err):
+                _LOGGER.info(
+                    "Attempting to rediscover Samsung TV with UDN %s", self.udn
+                )
+                new_location = await self._rediscover_device()
+                if new_location:
+                    self.location = new_location
+                    # Retry setup with new location
+                    try:
+                        self._device = SamsungTVUPnPDevice(self.location)
+                        await self._device.async_setup()
+                        await self._device.async_subscribe_events(
+                            self.handle_volume_event
+                        )
+                        _LOGGER.info(
+                            "Successfully reconnected to Samsung TV at %s",
+                            self.location,
+                        )
+                        return
+                    except Exception as retry_err:
+                        _LOGGER.error(
+                            "Failed to reconnect even with new location: %s", retry_err
+                        )
+
             raise
+
+    async def _rediscover_device(self) -> str | None:
+        """Rediscover device location using Home Assistant SSDP cache."""
+        try:
+            discovery_info = await ssdp.async_get_discovery_info_by_udn(
+                self.hass, self.udn
+            )
+            if discovery_info:
+                new_location = discovery_info.ssdp_location
+                _LOGGER.info(
+                    "Rediscovered Samsung TV at new location: %s", new_location
+                )
+                return new_location
+            else:
+                _LOGGER.warning(
+                    "Samsung TV with UDN %s not found in SSDP cache", self.udn
+                )
+                return None
+        except Exception as err:
+            _LOGGER.error("Failed to rediscover Samsung TV: %s", err)
+            return None
 
     @callback
     def handle_volume_event(self, volume: int) -> None:
