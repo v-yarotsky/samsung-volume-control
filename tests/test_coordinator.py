@@ -28,7 +28,7 @@ class TestSamsungTVCoordinator:
         coordinator = SamsungTVCoordinator(hass, location, "Test TV")
         
         # Mock initial volume
-        mock_upnp_factory["dmr_device"].async_get_volume.return_value = 50
+        mock_upnp_factory["dmr_device"].volume_level = 0.5
         
         # Test first refresh
         await coordinator.async_refresh()
@@ -47,7 +47,7 @@ class TestSamsungTVCoordinator:
         await coordinator.async_refresh()
         
         # Change volume on device
-        mock_upnp_factory["dmr_device"].async_get_volume.return_value = 75
+        mock_upnp_factory["dmr_device"].volume_level = 0.75
         
         # Refresh data
         await coordinator.async_refresh()
@@ -66,8 +66,8 @@ class TestSamsungTVCoordinator:
         assert coordinator.last_update_success
         assert coordinator.available
         
-        # Simulate device going offline
-        mock_upnp_factory["dmr_device"].async_get_volume.side_effect = ConnectionError("Device offline")
+        # Simulate device going offline by making volume_level property return None
+        mock_upnp_factory["dmr_device"].volume_level = None
         
         # Refresh should handle error gracefully - UpdateFailed is caught by framework
         await coordinator.async_refresh()
@@ -101,7 +101,7 @@ class TestSamsungTVCoordinator:
         await coordinator.async_set_volume(0.6)  # 60%
         
         # Verify device method was called
-        mock_upnp_factory["dmr_device"].async_set_volume.assert_called_with(60)
+        mock_upnp_factory["dmr_device"].async_set_volume_level.assert_called_with(0.6)
         
         # Verify data was updated
         assert coordinator.data["volume_level"] == 0.6
@@ -117,8 +117,8 @@ class TestSamsungTVCoordinator:
         assert coordinator.last_update_success
         assert coordinator.available
         
-        # Simulate device disconnection
-        mock_upnp_factory["dmr_device"].async_get_volume.side_effect = ConnectionError("Device offline")
+        # Simulate device disconnection by making volume_level property return None
+        mock_upnp_factory["dmr_device"].volume_level = None
         
         # Refresh handles error gracefully - no exception bubbles up
         await coordinator.async_refresh()
@@ -127,8 +127,7 @@ class TestSamsungTVCoordinator:
         assert not coordinator.available
         
         # Simulate device coming back online
-        mock_upnp_factory["dmr_device"].async_get_volume.side_effect = None
-        mock_upnp_factory["dmr_device"].async_get_volume.return_value = 40
+        mock_upnp_factory["dmr_device"].volume_level = 0.4
         
         # Refresh should succeed and mark as available
         await coordinator.async_refresh()

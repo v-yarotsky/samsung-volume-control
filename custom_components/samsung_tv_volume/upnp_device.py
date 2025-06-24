@@ -56,7 +56,11 @@ class SamsungTVUPnPDevice:
             raise RuntimeError("Device not set up")
 
         try:
-            volume = await self._dmr_device.async_get_volume()
+            # DmrDevice.volume_level returns 0.0-1.0, convert to 0-100
+            volume_level = self._dmr_device.volume_level
+            if volume_level is None:
+                raise RuntimeError("Volume level not available")
+            volume = int(volume_level * 100)
             _LOGGER.debug("Current volume: %s", volume)
             return volume
         except Exception as err:
@@ -72,7 +76,9 @@ class SamsungTVUPnPDevice:
             raise ValueError(f"Volume must be between 0 and 100, got {volume}")
 
         try:
-            await self._dmr_device.async_set_volume(volume)
+            # Convert 0-100 range to 0.0-1.0 for DmrDevice
+            volume_level = volume / 100.0
+            await self._dmr_device.async_set_volume_level(volume_level)
             _LOGGER.debug("Set volume to %s", volume)
         except Exception as err:
             _LOGGER.error("Failed to set volume to %s: %s", volume, err)

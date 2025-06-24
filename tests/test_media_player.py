@@ -129,7 +129,7 @@ class TestSamsungTVMediaPlayer:
         )
 
         # Mock coordinator data and availability
-        mock_upnp_factory["dmr_device"].async_get_volume.return_value = 50
+        mock_upnp_factory["dmr_device"].volume_level = 0.5
         await coordinator.async_refresh()
 
         entity = SamsungTVMediaPlayer(coordinator)

@@ -27,7 +27,6 @@ class TestUpnpDevice:
         volume = await device.async_get_volume()
         
         assert volume == 50
-        mock_upnp_factory["dmr_device"].async_get_volume.assert_called_once()
 
     async def test_set_volume_via_dmr_device(self, mock_upnp_factory):
         """Test setting volume through DmrDevice."""
@@ -37,7 +36,7 @@ class TestUpnpDevice:
         await device.async_setup()
         await device.async_set_volume(75)
         
-        mock_upnp_factory["dmr_device"].async_set_volume.assert_called_once_with(75)
+        mock_upnp_factory["dmr_device"].async_set_volume_level.assert_called_once_with(0.75)
 
     async def test_volume_validation(self, mock_upnp_factory):
         """Test volume value validation."""

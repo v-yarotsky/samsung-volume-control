@@ -55,9 +55,9 @@ def mock_upnp_device():
         "udn": "uuid:08583b01-008c-1000-817d-bc148594dddb"
     }
     
-    # Mock async methods
-    device.async_get_volume = AsyncMock(return_value=50)
-    device.async_set_volume = AsyncMock()
+    # Mock async methods with new API
+    device.volume_level = 0.5  # 50% volume (0.0-1.0 range)
+    device.async_set_volume_level = AsyncMock()
     
     return device
 
@@ -91,8 +91,8 @@ def mock_upnp_factory():
         
         # Configure DmrDevice mock
         dmr_device = AsyncMock()
-        dmr_device.async_get_volume.return_value = 50
-        dmr_device.async_set_volume = AsyncMock()
+        dmr_device.volume_level = 0.5  # 50% volume (0.0-1.0 range)
+        dmr_device.async_set_volume_level = AsyncMock()
         mock_dmr_class.return_value = dmr_device
         
         yield {
