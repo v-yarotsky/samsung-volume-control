@@ -12,7 +12,8 @@
   "requirements": ["async-upnp-client"],
   "ssdp": [
     {
-      "st": "urn:schemas-upnp-org:service:RenderingControl:1"
+      "st": "urn:schemas-upnp-org:service:RenderingControl:1",
+      "manufacturer": "Samsung*"
     }
   ]
 }
