@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from homeassistant.components import ssdp
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.samsung_tv_volume.const import DOMAIN
@@ -11,7 +11,7 @@ from custom_components.samsung_tv_volume.const import DOMAIN
 @pytest.fixture
 def mock_ssdp_info():
     """Mock SSDP discovery info for Samsung TV."""
-    return ssdp.SsdpServiceInfo(
+    return SsdpServiceInfo(
         ssdp_usn="uuid:08583b01-008c-1000-817d-bc148594dddb::urn:schemas-upnp-org:service:RenderingControl:1",
         ssdp_st="urn:schemas-upnp-org:service:RenderingControl:1",
         ssdp_location="http://192.168.1.219:7676/smp_14_",

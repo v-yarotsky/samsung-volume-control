@@ -2,8 +2,8 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.samsung_tv_volume import config_flow
 from custom_components.samsung_tv_volume.const import DOMAIN
@@ -69,7 +69,7 @@ class TestSamsungTVVolumeConfigFlow:
     async def test_ssdp_discovery_non_samsung_device(self, enable_custom_integrations, hass):
         """Test SSDP discovery ignores non-Samsung devices."""
         # Non-Samsung device
-        mock_ssdp_info = ssdp.SsdpServiceInfo(
+        mock_ssdp_info = SsdpServiceInfo(
             ssdp_usn="uuid:12345678-1234-1234-1234-123456789abc::urn:schemas-upnp-org:service:RenderingControl:1",
             ssdp_st="urn:schemas-upnp-org:service:RenderingControl:1", 
             ssdp_location="http://192.168.1.100:8080/description.xml",

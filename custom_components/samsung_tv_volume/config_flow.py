@@ -3,8 +3,8 @@
 from urllib.parse import urlparse
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.client_factory import UpnpFactory
@@ -18,7 +18,7 @@ class SamsungTVVolumeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle SSDP discovery."""
         LOGGER.debug("SSDP discovery: %s", discovery_info)
