@@ -1,10 +1,11 @@
 """Samsung TV Volume Control MediaPlayer entity."""
-from __future__ import annotations
 
 import logging
-from typing import Any
 
-from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -25,10 +26,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Samsung TV MediaPlayer from config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    
+
     # Create MediaPlayer entity
     entity = SamsungTVMediaPlayer(coordinator)
-    
+
     async_add_entities([entity], True)
 
 
@@ -39,7 +40,9 @@ class SamsungTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Initialize the MediaPlayer entity."""
         super().__init__(coordinator)
         self._attr_name = coordinator.name
-        self._attr_unique_id = f"{DOMAIN}_{coordinator.location.replace(':', '_').replace('/', '_')}"
+        self._attr_unique_id = (
+            f"{DOMAIN}_{coordinator.location.replace(':', '_').replace('/', '_')}"
+        )
         self._attr_supported_features = MediaPlayerEntityFeature.VOLUME_SET
 
     @property
@@ -48,7 +51,7 @@ class SamsungTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         upnp_device_info = self.coordinator.get_device_info()
         if not upnp_device_info:
             return None
-            
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=upnp_device_info["friendly_name"],

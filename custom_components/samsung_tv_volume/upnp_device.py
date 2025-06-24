@@ -1,5 +1,4 @@
 """UPnP device management for Samsung TV Volume Control."""
-from __future__ import annotations
 
 import logging
 from typing import TypedDict
@@ -14,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class DeviceInfo(TypedDict, total=False):
     """Type definition for UPnP device info."""
+
     friendly_name: str
     manufacturer: str
     model_name: str
@@ -37,15 +37,15 @@ class SamsungTVUPnPDevice:
     async def async_setup(self) -> None:
         """Set up the UPnP device connection."""
         _LOGGER.debug("Setting up UPnP device at %s", self.location)
-        
+
         try:
             self._requester = AiohttpRequester(timeout=10)
             factory = UpnpFactory(self._requester)
             self._upnp_device = await factory.async_create_device(self.location)
             self._dmr_device = DmrDevice(self._upnp_device)
-            
+
             _LOGGER.debug("Successfully created DmrDevice for %s", self.location)
-            
+
         except Exception as err:
             _LOGGER.error("Failed to create UPnP device at %s: %s", self.location, err)
             raise
@@ -54,7 +54,7 @@ class SamsungTVUPnPDevice:
         """Get current volume level."""
         if not self._dmr_device:
             raise RuntimeError("Device not set up")
-            
+
         try:
             volume = await self._dmr_device.async_get_volume()
             _LOGGER.debug("Current volume: %s", volume)
@@ -67,10 +67,10 @@ class SamsungTVUPnPDevice:
         """Set volume level."""
         if not self._dmr_device:
             raise RuntimeError("Device not set up")
-            
+
         if not 0 <= volume <= 100:
             raise ValueError(f"Volume must be between 0 and 100, got {volume}")
-            
+
         try:
             await self._dmr_device.async_set_volume(volume)
             _LOGGER.debug("Set volume to %s", volume)
@@ -82,7 +82,7 @@ class SamsungTVUPnPDevice:
         """Subscribe to UPnP events from Samsung TV."""
         if not self._dmr_device:
             raise RuntimeError("Device not set up")
-            
+
         try:
             # TODO: Implement actual event subscription using async-upnp-client
             # For now, just store the callback for testing
@@ -106,7 +106,7 @@ class SamsungTVUPnPDevice:
         """Return device info from UPnP device."""
         if not self._upnp_device:
             return None
-        
+
         # Extract real device info from UPnP device
         device_info = DeviceInfo(
             friendly_name=self._upnp_device.friendly_name,
@@ -116,17 +116,17 @@ class SamsungTVUPnPDevice:
             serial_number=self._upnp_device.serial_number,
             udn=self._upnp_device.udn,
             device_type=self._upnp_device.device_type,
-            presentation_url=self._upnp_device.presentation_url
+            presentation_url=self._upnp_device.presentation_url,
         )
-        
+
         return device_info
 
     async def async_close(self) -> None:
         """Close the UPnP device connection."""
         # Unsubscribe from events before closing
-        if hasattr(self, '_event_callback') and self._event_callback:
+        if hasattr(self, "_event_callback") and self._event_callback:
             await self.async_unsubscribe_events()
-            
+
         if self._requester:
             await self._requester.close()
             self._requester = None
