@@ -65,9 +65,9 @@ def mock_upnp_device():
 @pytest.fixture  
 def mock_upnp_factory():
     """Mock the UPnP factory and related components."""
-    with patch('custom_components.samsung_tv_volume.upnp_device.AiohttpRequester') as mock_requester_class, \
-         patch('custom_components.samsung_tv_volume.upnp_device.UpnpFactory') as mock_factory_class, \
-         patch('custom_components.samsung_tv_volume.upnp_device.DmrDevice') as mock_dmr_class:
+    with patch('custom_components.samsung_tv_volume.upnp_device.AiohttpRequester', autospec=True) as mock_requester_class, \
+         patch('custom_components.samsung_tv_volume.upnp_device.UpnpFactory', autospec=True) as mock_factory_class, \
+         patch('custom_components.samsung_tv_volume.upnp_device.DmrDevice', autospec=True) as mock_dmr_class:
         
         # Configure requester mock  
         requester_instance = AsyncMock()
@@ -89,10 +89,14 @@ def mock_upnp_factory():
         upnp_device.presentation_url = "http://192.168.1.219/"
         factory_instance.async_create_device.return_value = upnp_device
         
-        # Configure DmrDevice mock
-        dmr_device = AsyncMock()
+        # Configure DmrDevice mock with spec
+        from async_upnp_client.profiles.dlna import DmrDevice
+        dmr_device = AsyncMock(spec=DmrDevice)
         dmr_device.volume_level = 0.5  # 50% volume (0.0-1.0 range)
         dmr_device.async_set_volume_level = AsyncMock()
+        dmr_device.has_volume_level = True
+        dmr_device.has_volume_mute = True
+        dmr_device.is_volume_muted = False
         mock_dmr_class.return_value = dmr_device
         
         yield {
