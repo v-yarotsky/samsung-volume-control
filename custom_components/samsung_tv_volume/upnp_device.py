@@ -56,6 +56,9 @@ class SamsungTVUPnPDevice:
             raise RuntimeError("Device not set up")
 
         try:
+            # Update DmrDevice state before accessing properties
+            await self._dmr_device.async_update()
+
             # DmrDevice.volume_level returns 0.0-1.0, convert to 0-100
             volume_level = self._dmr_device.volume_level
             if volume_level is None:
