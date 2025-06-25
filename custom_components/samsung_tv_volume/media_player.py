@@ -64,7 +64,7 @@ class SamsungTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.available
+        return self.coordinator.last_update_success
 
     @property
     def state(self) -> str:

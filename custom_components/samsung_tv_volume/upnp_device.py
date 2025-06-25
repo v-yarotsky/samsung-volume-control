@@ -118,11 +118,12 @@ class SamsungTVUPnPDevice:
 
         # Look for volume changes in RenderingControl service
         if service.service_type == "urn:schemas-upnp-org:service:RenderingControl:1":
-            if "Volume" in state_variables:
-                volume = state_variables["Volume"]
-                _LOGGER.debug("Volume changed to: %s", volume)
-                if self._event_callback:
-                    self._event_callback(volume)
+            for state_var in state_variables:
+                if state_var.name == "Volume":
+                    volume = int(state_var.value)
+                    _LOGGER.debug("Volume changed to: %s", volume)
+                    if self._event_callback:
+                        self._event_callback(volume)
 
     async def async_unsubscribe_events(self) -> None:
         """Unsubscribe from UPnP events."""

@@ -14,7 +14,8 @@ from .upnp_device import SamsungTVUPnPDevice, DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-# No polling needed - we use UPnP events for real-time updates and SSDP for device discovery
+# Use polling for health checks, UPnP events for real-time updates
+HEALTH_CHECK_INTERVAL = timedelta(seconds=15)
 
 
 class SamsungTVCoordinator(DataUpdateCoordinator):
@@ -32,17 +33,12 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=name,
-            # No update_interval - we use push-based updates via UPnP events
+            update_interval=HEALTH_CHECK_INTERVAL,
         )
         self.location = location
         self.udn = udn
         self._device: SamsungTVUPnPDevice | None = None
-        self._available = False
 
-    @property
-    def available(self) -> bool:
-        """Return if device is available."""
-        return self._available
 
     def get_device_info(self) -> DeviceInfo | None:
         """Return device info from UPnP device."""
@@ -58,48 +54,12 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
         try:
             # Get current volume from device
             volume = await self._device.async_get_volume()
-
-            self._available = True
             return {
                 "volume_level": volume / 100.0,  # Convert to 0.0-1.0 range
                 "is_volume_muted": False,  # TODO: Add mute support later
             }
 
         except Exception as err:
-            self._available = False
-            
-            # Try rediscovery for connection/UPnP errors, fallback to marking unavailable
-            if isinstance(err, (ClientError, UpnpError)):
-                _LOGGER.info(
-                    "Attempting to rediscover Samsung TV with UDN %s (error: %s)",
-                    self.udn,
-                    type(err).__name__,
-                )
-                new_location = await self._rediscover_device()
-                if new_location:
-                    self.location = new_location
-                    # Retry setup with new location
-                    try:
-                        await self._setup_device()
-                        # Retry getting volume after rediscovery
-                        volume = await self._device.async_get_volume()
-                        self._available = True
-                        return {
-                            "volume_level": volume / 100.0,
-                            "is_volume_muted": False,
-                        }
-                    except Exception as retry_err:
-                        _LOGGER.error(
-                            "Failed to get data even after rediscovery: %s", retry_err
-                        )
-                
-                # If rediscovery failed, mark device unavailable
-                _LOGGER.debug("Samsung TV is offline (%s): %s", type(err).__name__, err)
-                return {
-                    "volume_level": 0.0,
-                    "is_volume_muted": False,
-                }
-            
             _LOGGER.error("Error updating Samsung TV data: %s", err)
             raise UpdateFailed(f"Error updating Samsung TV: {err}") from err
 

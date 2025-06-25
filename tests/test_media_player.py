@@ -44,14 +44,19 @@ class TestSamsungTVMediaPlayer:
         coordinator = SamsungTVCoordinator(
             hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
-        coordinator._available = True
-
         entity = SamsungTVMediaPlayer(coordinator)
-
+        
+        # Test successful state
+        await coordinator.async_refresh()
+        assert coordinator.last_update_success is True
         assert entity.available is True
 
-        # Test unavailable state
-        coordinator._available = False
+        # Test failure state - mock device to raise exception
+        from aiohttp import ClientError
+        mock_upnp_factory["dmr_device"].async_update.side_effect = ClientError("Connection failed")
+        await coordinator.async_refresh()
+        
+        assert coordinator.last_update_success is False
         assert entity.available is False
 
     async def test_media_player_state(self, hass, mock_upnp_factory):
@@ -59,15 +64,19 @@ class TestSamsungTVMediaPlayer:
         coordinator = SamsungTVCoordinator(
             hass, "http://192.168.1.219:7676/smp_14_", "Test TV", "uuid:test-udn"
         )
-
         entity = SamsungTVMediaPlayer(coordinator)
 
         # Test available state
-        coordinator._available = True
+        await coordinator.async_refresh()
+        assert coordinator.last_update_success is True
         assert entity.state == STATE_ON
 
-        # Test unavailable state
-        coordinator._available = False
+        # Test unavailable state - simulate device failure
+        from aiohttp import ClientError
+        mock_upnp_factory["dmr_device"].async_update.side_effect = ClientError("Connection failed")
+        await coordinator.async_refresh()
+        
+        assert coordinator.last_update_success is False
         assert entity.state == STATE_OFF
 
     async def test_media_player_set_volume(self, hass, mock_upnp_factory):

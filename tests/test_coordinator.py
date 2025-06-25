@@ -37,8 +37,7 @@ class TestSamsungTVCoordinator:
         assert coordinator.last_update_success
         assert coordinator.data["volume_level"] == 0.5  # 50/100
         assert coordinator.data["is_volume_muted"] is False
-        assert coordinator.available
-
+        
     async def test_coordinator_refresh_updates_volume(self, hass, mock_upnp_factory):
         """Test coordinator refresh updates volume data."""
         location = "http://192.168.1.219:7676/smp_14_"
@@ -64,8 +63,7 @@ class TestSamsungTVCoordinator:
         
         # Verify initial state
         assert coordinator.last_update_success
-        assert coordinator.available
-        
+                
         # Simulate device going offline by making volume_level property return None
         mock_upnp_factory["dmr_device"].volume_level = None
         
@@ -74,7 +72,6 @@ class TestSamsungTVCoordinator:
         
         # Verify coordinator state reflects the offline device
         assert not coordinator.last_update_success
-        assert not coordinator.available
 
     async def test_coordinator_event_callback(self, hass, mock_upnp_factory):
         """Test coordinator handles UPnP volume events."""
@@ -115,8 +112,7 @@ class TestSamsungTVCoordinator:
         
         # Verify initial state
         assert coordinator.last_update_success
-        assert coordinator.available
-        
+                
         # Simulate device disconnection by making volume_level property return None
         mock_upnp_factory["dmr_device"].volume_level = None
         
@@ -124,7 +120,6 @@ class TestSamsungTVCoordinator:
         await coordinator.async_refresh()
         
         assert not coordinator.last_update_success
-        assert not coordinator.available
         
         # Simulate device coming back online
         mock_upnp_factory["dmr_device"].volume_level = 0.4
@@ -133,7 +128,6 @@ class TestSamsungTVCoordinator:
         await coordinator.async_refresh()
         
         assert coordinator.last_update_success
-        assert coordinator.available
         assert coordinator.data["volume_level"] == 0.4
 
     async def test_coordinator_cleanup(self, hass, mock_upnp_factory):
@@ -176,19 +170,15 @@ class TestSamsungTVCoordinator:
         # First, establish a working connection
         await coordinator.async_refresh()
         assert coordinator.last_update_success
-        assert coordinator.available
-        
+                
         # Now simulate TV going offline with ClientError
         mock_upnp_factory["dmr_device"].async_update.side_effect = ClientError("Connection failed")
         
         # Refresh should not raise UpdateFailed, but should mark device unavailable
         await coordinator.async_refresh()
         
-        # Device should be marked unavailable but coordinator should still have data
-        assert not coordinator.available
-        assert coordinator.data is not None
-        assert coordinator.data["volume_level"] == 0.0  # Default when offline
-        assert coordinator.data["is_volume_muted"] is False
+        # Device should be marked unavailable via last_update_success
+        assert not coordinator.last_update_success
 
     async def test_coordinator_async_set_updated_data_on_upnp_events(self, hass, mock_upnp_factory):
         """Test coordinator uses async_set_updated_data for real-time UPnP volume events."""
