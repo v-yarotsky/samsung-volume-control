@@ -7,18 +7,14 @@ from typing import Any
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.components import ssdp
-from aiohttp import ClientPayloadError, ClientResponseError
-from async_upnp_client.exceptions import (
-    UpnpXmlContentError,
-    UpnpResponseError,
-    UpnpCommunicationError,
-)
+from aiohttp import ClientError
+from async_upnp_client.exceptions import UpnpError
 
 from .upnp_device import SamsungTVUPnPDevice, DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+# No polling needed - we use UPnP events for real-time updates and SSDP for device discovery
 
 
 class SamsungTVCoordinator(DataUpdateCoordinator):
@@ -36,7 +32,7 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=name,
-            update_interval=SCAN_INTERVAL,
+            # No update_interval - we use push-based updates via UPnP events
         )
         self.location = location
         self.udn = udn
@@ -71,6 +67,39 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
 
         except Exception as err:
             self._available = False
+            
+            # Try rediscovery for connection/UPnP errors, fallback to marking unavailable
+            if isinstance(err, (ClientError, UpnpError)):
+                _LOGGER.info(
+                    "Attempting to rediscover Samsung TV with UDN %s (error: %s)",
+                    self.udn,
+                    type(err).__name__,
+                )
+                new_location = await self._rediscover_device()
+                if new_location:
+                    self.location = new_location
+                    # Retry setup with new location
+                    try:
+                        await self._setup_device()
+                        # Retry getting volume after rediscovery
+                        volume = await self._device.async_get_volume()
+                        self._available = True
+                        return {
+                            "volume_level": volume / 100.0,
+                            "is_volume_muted": False,
+                        }
+                    except Exception as retry_err:
+                        _LOGGER.error(
+                            "Failed to get data even after rediscovery: %s", retry_err
+                        )
+                
+                # If rediscovery failed, mark device unavailable
+                _LOGGER.debug("Samsung TV is offline (%s): %s", type(err).__name__, err)
+                return {
+                    "volume_level": 0.0,
+                    "is_volume_muted": False,
+                }
+            
             _LOGGER.error("Error updating Samsung TV data: %s", err)
             raise UpdateFailed(f"Error updating Samsung TV: {err}") from err
 
@@ -92,16 +121,7 @@ class SamsungTVCoordinator(DataUpdateCoordinator):
             self._device = None
 
             # Try to rediscover device if location is stale (specific exception types)
-            if isinstance(
-                err,
-                (
-                    UpnpXmlContentError,
-                    ClientPayloadError,
-                    ClientResponseError,
-                    UpnpResponseError,
-                    UpnpCommunicationError,
-                ),
-            ):
+            if isinstance(err, (UpnpError, ClientError)):
                 _LOGGER.info(
                     "Attempting to rediscover Samsung TV with UDN %s (error: %s)",
                     self.udn,

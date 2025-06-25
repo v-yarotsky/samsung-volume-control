@@ -19,6 +19,8 @@ Reference the following documentation:
 - https://github.com/plugwise/plugwise_usb-beta/blob/main/tests/test_config_flow.py
 - https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
 - https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unavailable?_highlight=coordinator#example-for-integrations-using-the-coordinator
+- https://aarongodfrey.dev/home%20automation/use-coordinatorentity-with-the-dataupdatecoordinator/
+- https://developers.home-assistant.io/docs/integration_fetching_data/#pushing-api-endpoints
 
 I have previously had this JavaScript code to discover the device, use it to figure out how to do it with HomeAssistant:
 ```

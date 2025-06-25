@@ -165,3 +165,46 @@ class TestSamsungTVCoordinator:
         # Verify event subscription was attempted
         # (Implementation will call device.async_subscribe_events)
         # This test ensures the coordinator tries to set up real-time events
+
+    async def test_coordinator_handles_connection_refused_gracefully(self, hass, mock_upnp_factory):
+        """Test coordinator handles ClientError by marking device unavailable instead of raising UpdateFailed."""
+        from aiohttp import ClientError
+        
+        location = "http://192.168.1.219:7676/smp_14_"
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
+        
+        # First, establish a working connection
+        await coordinator.async_refresh()
+        assert coordinator.last_update_success
+        assert coordinator.available
+        
+        # Now simulate TV going offline with ClientError
+        mock_upnp_factory["dmr_device"].async_update.side_effect = ClientError("Connection failed")
+        
+        # Refresh should not raise UpdateFailed, but should mark device unavailable
+        await coordinator.async_refresh()
+        
+        # Device should be marked unavailable but coordinator should still have data
+        assert not coordinator.available
+        assert coordinator.data is not None
+        assert coordinator.data["volume_level"] == 0.0  # Default when offline
+        assert coordinator.data["is_volume_muted"] is False
+
+    async def test_coordinator_async_set_updated_data_on_upnp_events(self, hass, mock_upnp_factory):
+        """Test coordinator uses async_set_updated_data for real-time UPnP volume events."""
+        location = "http://192.168.1.219:7676/smp_14_"
+        coordinator = SamsungTVCoordinator(hass, location, "Test TV", "uuid:test-udn")
+        
+        # Initial setup
+        await coordinator.async_refresh()
+        assert coordinator.data["volume_level"] == 0.5
+        
+        # Simulate UPnP volume event from TV remote
+        coordinator.handle_volume_event(75)
+        
+        # Verify data was updated via async_set_updated_data (not polling)
+        assert coordinator.data["volume_level"] == 0.75
+        assert coordinator.last_update_success  # Should remain successful
+        
+        # Verify the update was immediate (no polling interval reset needed)
+        # This is the key benefit of using async_set_updated_data for push events
